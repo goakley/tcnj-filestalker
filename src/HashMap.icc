@@ -1,0 +1,142 @@
+// IF you can understand what this is saying:
+// http://javarevisited.blogspot.com/2011/02/how-hashmap-works-in-java.html
+
+// Do not forget this:
+// When storing, what is stored in the table is 
+//     a KEY/VALUE pairing, /!not just the VALUE!/
+//     This is NOT how we did it in DePasquale's!
+// When retrieving, an integer KEY is passed in
+// The KEY is converted to an integer hashCODE, which
+//     is between 0 and bucketCount-1
+// Use CODE to determine which bucket to look in
+// Use the passed-in KEY and the stored KEYs to determine 
+//     which VALUE is the correct one to retrieve.
+
+// Expected behaviour:
+// Storing a value with a key when there is already a 
+//     value in the table associated with that key will
+//     override the already-stored value, so make sure
+//     deletion and all that is handled properly there (and in remove)
+// Getting with a key that is not in the table will return NULL
+
+using namespace std;
+
+//method to get a hashcode based on the inputted key
+template <class A> int HashMap<A>::getHash(unsigned long int key)
+{
+  return (int)(key%bucketCount);
+}
+
+//constructor to create a hashmap of the inputted size
+template <class A> HashMap<A>::HashMap(int size)
+{
+  elementCount = 0;
+  bucketCount = size;
+  buckets = new List<HashNode<A> >[bucketCount];
+}
+
+//destructor to delete the information in the array
+template <class A> HashMap<A>::~HashMap()
+{
+  delete [] buckets;
+}
+
+// return false if the object is already in the map, 
+// but replaces it anyway
+template <class A> bool HashMap<A>::add(unsigned long int key, A /*&*/obj)
+{
+  bool result = false;	
+  int code = getHash(key);
+  HashNode<A> temp;
+
+  temp.key = key;
+  temp.value = obj;
+
+  int searchRes = buckets[code].search(temp);
+
+  if (searchRes < 0)
+    {
+      buckets[code].add(temp);
+      result = true;
+      elementCount++;
+    }
+  else
+    {
+      result = false;
+      //
+      buckets[code].remove(searchRes);
+      buckets[code].add(temp);
+      elementCount++;
+      //
+    }
+
+  return result;
+}
+
+
+//gets element based on key parameter
+// if key is not in map, sets errno to EDOM
+template <class A> A HashMap<A>::get(unsigned long int key)
+{
+  A result;
+
+  int code = getHash(key);
+  HashNode<A> temp;
+  temp.key = key;
+
+  int bucketIndex = buckets[code].search(temp);
+
+  errno = 0;
+  if (bucketIndex >= 0)
+    {
+      result = buckets[code].get(bucketIndex).value;
+    }
+  else
+    {
+      errno = EDOM;
+    }
+  return result;
+}
+
+//removes element based on key parameter
+// if key is not in map, sets errno to EDOM
+template <class A> A HashMap<A>::remove(unsigned long int key)
+{
+  A result;
+
+  int code = getHash(key);
+  HashNode<A> temp;
+
+  temp.key = key;
+  //temp.value = obj;
+
+  int bucketIndex = buckets[code].search(temp);
+
+  errno = 0;
+  if (bucketIndex >= 0)
+    {
+      result = buckets[code].remove(bucketIndex).value;
+		  elementCount--;
+    }
+  else
+    {
+      errno = EDOM;
+    }
+  return result;
+}
+
+//returns the element count
+template <class A> int HashMap<A>::getCount()
+{
+  return elementCount;
+}
+
+//returns a list to iterate through all items in the hashmap
+template <class A> List<A> HashMap<A>::iterator()
+{
+  List<A> result;
+  for (int i = 0; i < bucketCount; i++)
+    while (buckets[i].getSize() != 0)
+      result.add(buckets[i].remove().value);
+  return result;
+}

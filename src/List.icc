@@ -1,0 +1,103 @@
+template <class T>
+List<T>::List()
+{
+  count = 0;
+  head = NULL;
+}
+
+template <class T>
+List<T>::~List()
+{
+  while (count > 0)
+    remove();
+}
+
+template <class T>
+void List<T>::add(T element)
+{
+  ListNode<T> *temp = new ListNode<T>;
+  // add the element to the front of the list
+  temp->component = element;
+  temp->link = head;
+  head = temp;
+  temp = NULL;
+  count++;
+}
+
+template <class T>
+int List<T>::search(T element)
+{
+  // loop through the nodes until you find the one being searched for
+  ListNode<T> *temp = head;
+  int counter = 0;
+  while (temp != NULL)
+    {
+      if ((temp->component) == element)
+	// return the index of that element
+	return counter;
+      counter++;
+      temp = temp->link;
+    }
+  return -1;
+}
+
+// if index is outside of range, sets errno to EDOM
+template <class T>
+T List<T>::get(int index)
+{
+  errno = 0;
+  // check for correctness of index
+  if (index < 0 || index >= count)
+    {
+      errno = EDOM;
+      return T();
+    }
+  // loop through the nodes until you find the one at the specified index
+  ListNode<T> *temp = head;
+  for (int i = 0; i < index; i++)
+    temp = temp->link;
+  // return the element in that node
+  return temp->component;
+}
+
+// if index is outside of range, sets errno to EDOM
+template <class T>
+T List<T>::remove(int index)
+{
+  errno = 0;
+  // check for correctness of index
+  if (index < 0 || index >= count)
+    {
+      errno = EDOM;
+      return T();
+    }
+  ListNode<T> *temp = head;
+  if (index == 0)
+    {
+      head = temp->link;
+      T element = temp->component;
+      delete temp;
+      count--;
+      return element;
+    }
+  // loop through the nodes until you find the one at the specified index
+  ListNode<T> *lastTemp;
+  for (int i = 0; i < index; i++)
+    {
+      lastTemp = temp;
+      temp = temp->link;
+    }
+  // remove that node from the list
+  lastTemp->link = temp->link;
+  // return the element in that node
+  T element = temp->component;
+  delete temp;
+  count--;
+  return element;
+}
+
+template <class T>
+int List<T>::getSize()
+{
+  return count;
+}
